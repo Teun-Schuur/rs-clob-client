@@ -481,6 +481,7 @@ pub struct SignedOrder {
     pub order_type: OrderType,
     pub owner: ApiKey,
     pub post_only: Option<bool>,
+    // pub order_id: U256,
 }
 
 /// Helper struct for serializing Order with signature injected.
@@ -716,6 +717,7 @@ mod tests {
             order_type: OrderType::GTC,
             owner: ApiKey::nil(),
             post_only: None,
+            // order_id: U256::ZERO,
         };
 
         let value = to_value(&signed_order).expect("serialize SignedOrder");

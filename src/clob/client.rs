@@ -1447,9 +1447,12 @@ impl<K: Kind> Client<Authenticated<K>> {
             ..Eip712Domain::default()
         };
 
+        let hash = order.eip712_signing_hash(&domain);
         let signature = signer
-            .sign_hash(&order.eip712_signing_hash(&domain))
+            .sign_hash(&hash)
             .await?;
+        // Keccak-256
+        // let hash: U256 = hash.into();
 
         Ok(SignedOrder {
             order,
@@ -1457,6 +1460,7 @@ impl<K: Kind> Client<Authenticated<K>> {
             order_type,
             owner: self.state().credentials.key,
             post_only,
+            // order_id: hash
         })
     }
 

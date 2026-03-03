@@ -136,6 +136,30 @@ impl Client<Unauthenticated> {
 
 // Methods available in any state
 impl<S: State> Client<S> {
+
+    /// Subscribes to real-time market data updates for specified assets.
+    /// 
+    /// Returns a stream of raw WebSocket messages containing all market updates 
+    /// Use this for market activity monitoring when you want 
+    /// to handle message parsing yourself.
+    /// 
+    /// # Arguments
+    /// * `asset_ids` - List of asset/token IDs to monitor
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an error if the subscription cannot be created 
+    /// or the WebSocket connection is not established.
+    /// 
+    pub fn subscribe_market(
+        &self,
+        asset_ids: Vec<U256>,
+    ) -> Result<impl Stream<Item = Result<WsMessage>>> {
+        let resources = self.inner.get_or_create_channel(ChannelType::Market)?;
+        let stream = resources.subscriptions.subscribe_market(asset_ids)?;
+        Ok(stream)
+    }
+
     /// Subscribes to real-time orderbook updates for specified market assets.
     ///
     /// Returns a stream of orderbook snapshots showing all bid and ask levels.
@@ -386,6 +410,15 @@ impl<S: State> Client<S> {
             .iter()
             .map(|entry| entry.value().subscriptions.subscription_count())
             .sum()
+    }
+
+    /// Unsubscribe from market updates for specific assets.
+    /// 
+    /// This decrements the reference count for each asset. The server unsubscribe
+    /// is only sent when no other subscriptions are using those assets.
+    pub fn unsubscribe_market(&self, asset_ids: &[U256]) -> Result<()> {
+        self.inner
+            .unsubscribe_and_cleanup(ChannelType::Market, |subs| subs.unsubscribe_market(asset_ids))
     }
 
     /// Unsubscribe from orderbook updates for specific assets.
